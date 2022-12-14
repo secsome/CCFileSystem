@@ -2,13 +2,18 @@ namespace CCFileSystem
 {
 	public class MixFile
 	{
-		static private LinkedList<MixFile> _list = new LinkedList<MixFile>();
+		private static LinkedList<MixFile> _list = new LinkedList<MixFile>();
 
-		static public readonly int BlowfishKeySourceLength = 80;
-		static public readonly int BlowfishKeyLength = 56;
-		static public readonly int BlowfishBlockSize = 8;
+		public static readonly int BlowfishKeySourceLength = 80;
+		public static readonly int BlowfishKeyLength = 56;
+		public static readonly int BlowfishBlockSize = 8;
 
-		static public MemoryStream? Retrieve(int crc)
+		public static MemoryStream? Retrieve(string filename)
+		{
+			return Retrieve(GetFileCRC(filename));
+		}
+
+		public static MemoryStream? Retrieve(int crc)
 		{
 			foreach (MixFile file in _list)
 			{
@@ -94,6 +99,23 @@ namespace CCFileSystem
 			_list.Remove(this);
 		}
 
+		private static int GetFileCRC(string s)
+		{
+			// Westwood CRCEngine consider 4 bytes as a block, so padding is required sometimes.
+			s = s.ToUpper(); // Only uses upper case
+			int residue = s.Length % 4;
+			if (residue != 0) // Has residue data, needs padding
+			{
+				s += (char)residue; // First padding is residue length
+				// Now fill others by the first byte in this block
+				char filler = s[s.Length - residue];
+				for (int i = 0; i < residue; ++i)
+					s += filler;
+			}
+
+			return CRC.Memory(System.Text.Encoding.UTF8.GetBytes(s));
+		}
+
 		public byte[]? Digest
 		{
 			get
@@ -154,6 +176,6 @@ namespace CCFileSystem
 		private FileStream _fs;
 		private BinaryReader _br;
 	}
-
+	
 
 }
