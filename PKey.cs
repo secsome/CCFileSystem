@@ -52,16 +52,12 @@ namespace CCFileSystem
 			{
 				MemoryStream buf = new MemoryStream();
 				BinaryWriter bw = new BinaryWriter(buf);
-
-				List<uint> vals = new List<uint>();
 				BigInteger basev = new BigInteger(0x100000000ul);
 				do
 				{
-					vals.Add((uint)(src % basev));
+					bw.Write((uint)(src % basev));
 					src /= basev;
 				} while (src != BigInteger.Zero);
-				foreach (var v in vals)
-					bw.Write(v);
 				return buf.ToArray().Take(PlainBlockSize).ToArray();
 			}
 
