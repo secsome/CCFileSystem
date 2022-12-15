@@ -37,38 +37,16 @@ namespace CCFileSystem
 			const int CryptBlockSize = 40;
 			const int PlainBlockSize = 39;
 
-			// Westwood XMP uses (UINT_MAX + 1) as its base, and it's little endian
-			// We have to manually convert it to C# BigInteger before we apply RSA decryption.
-			BigInteger ToBigInt(byte[] src)
-			{
-				BigInteger result = BigInteger.Zero;
-				var basev = new BigInteger(0x100000000ul);
-				for (int i = 0; i < src.Length; i += 4)
-					result += new BigInteger(BitConverter.ToUInt32(src, i)) * BigInteger.Pow(basev, i / 4);
-				return result;
-			}
-			// So do we need Westwood XMP format data
-			byte[] FromBigInt(BigInteger src)
-			{
-				MemoryStream buf = new MemoryStream();
-				BinaryWriter bw = new BinaryWriter(buf);
-				BigInteger basev = new BigInteger(0x100000000ul);
-				do
-				{
-					bw.Write((uint)(src % basev));
-					src /= basev;
-				} while (src != BigInteger.Zero);
-				return buf.ToArray().Take(PlainBlockSize).ToArray();
-			}
-
+			// https://referencesource.microsoft.com/#System.Numerics/System/Numerics/BigInteger.cs
+			// ToByteArray and the byte[] CTOR is just what we need
 			MemoryStream ms = new MemoryStream();
 			int idx = 0;
 			while (idx < data.Length)
 			{
-				BigInteger temp = ToBigInt(data.Skip(idx).Take(CryptBlockSize).ToArray());
+				BigInteger temp = new BigInteger(data.Skip(idx).Take(CryptBlockSize).ToArray());
 				// RSA decryption: d = c ^ e mod m
-				var buffer = FromBigInt(BigInteger.ModPow(temp, _exponent, _modulus));
-				ms.Write(buffer, 0, buffer.Length);
+				var buffer = BigInteger.ModPow(temp, _exponent, _modulus).ToByteArray().Take(PlainBlockSize).ToArray();
+				ms.Write(buffer);
 				idx += CryptBlockSize;
 			}
 
