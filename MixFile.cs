@@ -107,6 +107,7 @@ namespace CCFileSystem
 			if (residue != 0) // Has residue data, needs padding
 			{
 				s += (char)residue; // First padding is residue length
+
 				// Now fill others by the first byte in this block
 				char filler = s[s.Length - residue];
 				for (int i = 0; i < residue; ++i)
@@ -176,6 +177,6 @@ namespace CCFileSystem
 		private FileStream _fs;
 		private BinaryReader _br;
 	}
-	
+
 
 }
