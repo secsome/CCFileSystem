@@ -5,7 +5,7 @@ namespace CCFileSystem
 		private FileAccess _rights;
 		private long _biasStart;
 		private long _biasLength;
-		private FileStream? _stream;
+		protected Stream? _stream;
 		private string _filename;
 
 		public RawFileClass(string filename)
