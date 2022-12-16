@@ -21,7 +21,7 @@ namespace CCFileSystem
 			}
 		}
 
-		public override byte[]? Get(int length)
+		public override byte[]? Get(long length)
 		{
 			if (_file != null && length > 0)
 			{

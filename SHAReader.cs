@@ -11,7 +11,7 @@ namespace CCFileSystem
 			_sha = SHA1.Create();
 		}
 
-		public override byte[]? Get(int length)
+		public override byte[]? Get(long length)
 		{
 			byte[]? buffer = base.Get(length);
 			if (buffer == null)

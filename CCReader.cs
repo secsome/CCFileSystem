@@ -30,7 +30,7 @@ namespace CCFileSystem
 			}
 		}
 
-		public virtual byte[]? Get(int length)
+		public virtual byte[]? Get(long length)
 		{
 			if (_to == null)
 				return null;
