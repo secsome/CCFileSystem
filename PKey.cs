@@ -60,10 +60,10 @@ namespace CCFileSystem
 		public int Plain_Block_Size => ((int)_bitPrecision - 1) / 8;
 		public int Crypt_Block_Size => Plain_Block_Size + 1;
 		public int Block_Count(int plain_length)
-		{ 
-			return (plain_length - 1) / Plain_Block_Size + 1; 
+		{
+			return (plain_length - 1) / Plain_Block_Size + 1;
 		}
-		
+
 		private BigInteger _modulus;
 		private BigInteger _exponent;
 		private long _bitPrecision;

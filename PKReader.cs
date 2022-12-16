@@ -91,7 +91,7 @@ namespace CCFileSystem
 			var tmp = base.Get(length);
 			if (tmp == null)
 				return null;
-			
+
 			return buffer.ToArray().Concat(tmp).ToArray();
 		}
 

@@ -88,7 +88,7 @@ namespace CCFileSystem
 				_file.Seek(2, SeekOrigin.Begin);
 				_dataSize = BitConverter.ToInt16(reader.Get(4));
 			}
-			
+
 			subblocks = reader.Get(_count * SubBlock.MemorySize);
 			_subBlocks = new List<SubBlock>();
 			for (int i = 0; i < _count; ++i)

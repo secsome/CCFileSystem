@@ -24,10 +24,10 @@ namespace CCFileSystem
 		{
 			if (length <= 0)
 				return null;
-			
+
 			if (_bf == null)
 				return base.Get(length);
-			
+
 			long total = 0;
 			MemoryStream buffer = new MemoryStream();
 			while (length > 0)
@@ -45,7 +45,7 @@ namespace CCFileSystem
 					var tmp = base.Get(_buffer.Length);
 					if (tmp == null)
 						break;
-					
+
 					tmp.CopyTo(_buffer, 0);
 					if (tmp.Length == _buffer.Length)
 					{
@@ -56,7 +56,7 @@ namespace CCFileSystem
 					}
 					else
 						_buffer.CopyTo(_buffer, tmp.Length);
-					
+
 					_counter = tmp.Length;
 				}
 			}
@@ -64,7 +64,7 @@ namespace CCFileSystem
 			byte[] arr = buffer.ToArray();
 			return arr.Length > 0 ? arr : null;
 		}
-		
+
 		public void Key(byte[] key)
 		{
 			if (_bf == null)
