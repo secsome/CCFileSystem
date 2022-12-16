@@ -15,12 +15,12 @@ namespace CCFileSystem
 			try
 			{
 				if (base.Open(rights))
-			{
-				_stream = new BufferedStream(_stream);
-				return true;
-			}
-			else
-				return false;
+				{
+					_stream = new BufferedStream(_stream);
+					return true;
+				}
+				else
+					return false;
 			}
 			catch { return false; }
 		}

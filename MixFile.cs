@@ -1,8 +1,9 @@
 global using MFCC = CCFileSystem.MixFile<CCFileSystem.CCFileClass>;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CCFileSystem
 {
-	public class MixFile<TFile> where TFile : FileClass, new()
+	public class MixFile<TFile> where TFile : RawFileClass, new()
 	{
 		private static LinkedList<MixFile<TFile>> _list = new LinkedList<MixFile<TFile>>();
 
@@ -10,13 +11,18 @@ namespace CCFileSystem
 		public static readonly int BlowfishKeyLength = 56;
 		public static readonly int BlowfishBlockSize = 8;
 
-		public static MixFile<TFile>? Offset(string filename, out byte[]? data, out int offset, out int size)
-		{
-			data = null;
-			offset = 0;
-			size = 0;
-			return null;
-		}
+		private List<SubBlock> _subBlocks;
+		private string _filename;
+		private long _dataStart;
+		private int _count;
+		private int _dataSize;
+		private bool _isDigest;
+		private bool _isEncrypted;
+		private TFile _file;
+		private byte[]? _data;
+
+		public string Filename => _filename;
+		public List<SubBlock> SubBlocks => _subBlocks;
 
 		public static MixFile<TFile>? Find(string filename)
 		{
@@ -26,8 +32,23 @@ namespace CCFileSystem
 			return Offset(filename, out data, out offset, out size);
 		}
 
-		public struct SubBlock
+		public struct SubBlock : IEquatable<SubBlock>, IComparable<SubBlock>
 		{
+			public bool Equals(SubBlock b)
+			{
+				return CRC == b.CRC;
+			}
+
+			public int CompareTo(SubBlock other)
+			{
+				if (CRC < other.CRC)
+					return -1;
+				else if (CRC > other.CRC)
+					return 1;
+				else
+					return 0;
+			}
+
 			public static readonly int MemorySize = 12;
 			public int CRC;
 			public int Offset;
@@ -84,24 +105,170 @@ namespace CCFileSystem
 			}
 
 
-			_subBlocks = new SortedList<int, SubBlock>();
+			_subBlocks = new List<SubBlock>();
 			for (int i = 0; i < _count; ++i)
 			{
 				var block = new SubBlock();
 				block.CRC = BitConverter.ToInt32(subblocks, SubBlock.MemorySize * i);
 				block.Offset = BitConverter.ToInt32(subblocks, SubBlock.MemorySize * i + 4);
 				block.Size = BitConverter.ToInt32(subblocks, SubBlock.MemorySize * i + 8);
-				_subBlocks[block.CRC] = block;
+				_subBlocks.Add(block);
 			}
+
 			_dataStart = _file.Seek(0);
 			_filename = filename;
-
-			_list.AddFirst(this);
+			_data = null;
 		}
 
 		~MixFile()
 		{
-			_list.Remove(this);
+			_data = null;
+		}
+
+		public static bool Add_Mix_File(string filename, PKey pkey)
+		{
+			try
+			{
+				_list.AddLast(new MixFile<TFile>(filename, pkey));
+				return true;
+			}
+			catch { return false; }
+		}
+
+		public static bool Remove_Mix_File(string filename)
+		{
+			try
+			{
+				var mix = Finder(filename);
+				if (mix != null)
+				{
+					_list.Remove(mix);
+					return true;
+				}
+				return false;
+			}
+			catch { return false; }
+		}
+
+
+		public static MixFile<TFile>? Offset(string filename, out byte[]? data, out int offset, out int size)
+		{
+			data = null;
+			offset = 0;
+			size = 0;
+			if (string.IsNullOrEmpty(filename))
+				return null;
+
+			SubBlock block = new SubBlock();
+			block.CRC = Calculate_CRC(filename);
+
+			foreach (var mix in _list)
+			{
+				int idx = mix.SubBlocks.BinarySearch(block);
+				if (idx >= 0)
+				{
+					block = mix.SubBlocks[idx];
+					size = block.Size;
+					offset = block.Offset;
+					if (mix._data != null)
+						data = mix._data.Take(block.Offset).ToArray(); // TODO - Reduce memory waste here 
+					if (mix._data == null)
+						offset += (int)mix._dataStart;
+					return mix;
+				}
+			}
+
+			return null;
+		}
+
+		static private MixFile<TFile>? Finder(string filename)
+		{
+			foreach (var mix in _list)
+			{
+				string ext = Path.GetExtension(mix.Filename);
+				string name = Path.GetFileName(mix.Filename);
+				if (Path.Combine(name, ext).Equals(filename, StringComparison.OrdinalIgnoreCase))
+					return mix;
+			}
+
+			return null;
+		}
+
+		public bool Cache(byte[]? buffer)
+		{
+			if (_data != null)
+				return true;
+
+			if (buffer != null)
+			{
+				if (buffer.Length == 0 || buffer.Length >= _dataSize)
+					_data = buffer;
+			}
+			else
+				_data = new byte[_dataSize];
+
+			if (_data != null)
+			{
+				TFile file = new TFile();
+				file.Set_Name(_filename);
+				FileReader freader = new FileReader(file);
+				CCReader reader = freader;
+
+				SHAReader sha = new SHAReader();
+				if (_isDigest)
+				{
+					sha.Get_From(freader);
+					reader = sha;
+				}
+
+				file.Open();
+				file.Bias(0);
+				file.Bias(_dataStart);
+
+				_data = reader.Get(_dataSize);
+				if (_data == null || _data.Length != _dataSize)
+					throw new FileLoadException();
+
+				if (_isDigest)
+				{
+					var sha1 = sha.Result();
+					var sha2 = freader.Get(20);
+					if (sha2 == null || !sha1.SequenceEqual(sha2))
+					{
+						_data = null;
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			_data = null;
+			return false;
+		}
+
+		public static bool Cache(string filename, byte[]? buffer)
+		{
+			MixFile<TFile>? mix = Finder(filename);
+			if (mix == null)
+				return false;
+
+			return mix.Cache(buffer);
+		}
+
+		public void Free()
+		{
+			_data = null;
+		}
+
+		static public bool Free(string filename)
+		{
+			MixFile<TFile>? mix = Finder(filename);
+			if (mix == null)
+				return false;
+
+			mix.Free();
+			return true;
 		}
 
 		private static int Calculate_CRC(string s)
@@ -111,82 +278,16 @@ namespace CCFileSystem
 			int residue = s.Length % 4;
 			if (residue != 0) // Has residue data, needs padding
 			{
-				s += (char)residue; // First padding is residue length
-
 				// Now fill others by the first byte in this block
-				char filler = s[s.Length - residue];
-				for (int i = 0; i < residue; ++i)
+				s += (char)residue; // First padding is residue length
+				char filler = s[s.Length - residue - 1];
+				for (int i = 0; i < 3 - residue; ++i)
 					s += filler;
 			}
 
 			return CRC.Memory(System.Text.Encoding.UTF8.GetBytes(s));
 		}
 
-		public byte[]? Digest
-		{
-			get
-			{
-				// If this file is digested, then the last 20 bytes is SHA1 sum of it.
-				if (_isDigest)
-				{
-					_file.Seek(-20, SeekOrigin.End);
-					return _file.Read(20);
-				}
-				else
-					return null;
-			}
-		}
-
-		public long DataStart
-		{
-			get { return _dataStart; }
-			private set { _dataStart = value; }
-		}
-
-		public int Count
-		{
-			get { return _count; }
-			private set { _count = value; }
-		}
-
-		public int DataSize
-		{
-			get { return _dataSize; }
-			private set { DataSize = value; }
-		}
-
-		public SortedList<int, SubBlock> SubBlocks
-		{
-			get { return _subBlocks; }
-			private set { _subBlocks = value; }
-		}
-
-		public string Filename
-		{
-			get { return _filename; }
-			private set { _filename = value; }
-		}
-
-		public bool IsDigest
-		{
-			get { return _isDigest; }
-			private set { _isDigest = value; }
-		}
-
-		public bool IsEncrypted
-		{
-			get { return _isEncrypted; }
-			private set { _isEncrypted = value; }
-		}
-
-		private SortedList<int, SubBlock> _subBlocks;
-		private string _filename;
-		private long _dataStart;
-		private int _count;
-		private int _dataSize;
-		private bool _isDigest;
-		private bool _isEncrypted;
-		private TFile _file;
 	}
 
 

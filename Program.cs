@@ -2,26 +2,35 @@
 
 class Program
 {
+	static void Init_Boostrap_Mixfiles(PKey key)
+	{
+		for (int i = 99; i >= 0; --i)
+			MFCC.Add_Mix_File(string.Format("EXPANDMO{0:02d}.MIX", i), key);
+
+		MFCC.Add_Mix_File("RA2MD.MIX", key);
+		MFCC.Add_Mix_File("RA2.MIX", key);
+		MFCC.Add_Mix_File("CACHEMD.MIX", key);
+		MFCC.Add_Mix_File("CACHE.MIX", key);
+		MFCC.Add_Mix_File("LOCALMD.MIX", key);
+		MFCC.Add_Mix_File("LOCAL.MIX", key);
+	}
+
 	static void Main(string[] args)
 	{
-		string gamedir = @"E:\Games\Mental Omega\Mental Omega 3.3.7";
-		CCFileClass ccfile = new CCFileClass(Path.Combine(gamedir, "RA2.MIX"));
-		ccfile.Is_Available(true);
+		const string gamedir = @"";
+
+		if (!string.IsNullOrWhiteSpace(gamedir))
+			Environment.CurrentDirectory = gamedir;
 
 		PKey FastKey = new PKey(true);
 		FastKey.Set_Public_Key("AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V");
-		MFCC ra2 = new MFCC(Path.Combine(gamedir, "RA2.MIX"), FastKey);
-		MFCC ra2md = new MFCC(Path.Combine(gamedir, "RA2MD.MIX"), FastKey);
 
-		Console.WriteLine("RA2.MIX info:");
-		foreach (var subblock in ra2.SubBlocks)
-		{
-			Console.WriteLine(string.Format("{0} {1} {2}", subblock.Value.CRC, subblock.Value.Offset, subblock.Value.Size));
-		}
-		Console.WriteLine("RA2MD.MIX info:");
-		foreach (var subblock in ra2md.SubBlocks)
-		{
-			Console.WriteLine(string.Format("{0} {1} {2}", subblock.Value.CRC, subblock.Value.Offset, subblock.Value.Size));
-		}
+		Init_Boostrap_Mixfiles(FastKey);
+
+		byte[]? data;
+		int size;
+		int offset;
+		var mix = MFCC.Offset("12metfnt.fnt", out data, out offset, out size);
+		Console.WriteLine(string.Format("{0} {1}", offset, size));
 	}
 }

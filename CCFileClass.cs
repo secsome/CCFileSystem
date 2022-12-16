@@ -40,7 +40,7 @@ namespace CCFileSystem
 				byte[]? ret = null;
 				if (size > 0)
 				{
-					ret=  new byte[size];
+					ret = new byte[size];
 					_data.MemCopy(_position, ret, 0, size);
 					_position += size;
 				}
@@ -85,7 +85,7 @@ namespace CCFileSystem
 		{
 			if (_data != null)
 				return _data.LongLength;
-			
+
 			if (!base.Is_Available())
 			{
 				byte[]? data;
@@ -102,10 +102,10 @@ namespace CCFileSystem
 		{
 			if (Is_Open())
 				return true;
-			
+
 			if (MFCC.Find(File_Name()) != null)
 				return true;
-			
+
 			return base.Is_Available();
 		}
 
@@ -113,7 +113,7 @@ namespace CCFileSystem
 		{
 			if (_data != null)
 				return true;
-			
+
 			return base.Is_Open();
 		}
 
@@ -130,7 +130,7 @@ namespace CCFileSystem
 
 			if ((rights & FileAccess.Write) == FileAccess.Write || base.Is_Available())
 				return base.Open(rights);
-			
+
 			byte[]? data;
 			int offset;
 			int size;
@@ -152,7 +152,7 @@ namespace CCFileSystem
 			}
 			else
 				return base.Open(rights);
-			
+
 			return true;
 		}
 	}

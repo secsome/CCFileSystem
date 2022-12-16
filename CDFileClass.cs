@@ -6,12 +6,12 @@ namespace CCFileSystem
 
 		private bool _isDisabled;
 
-		public CDFileClass(string filename) : base(filename) 
+		public CDFileClass(string filename) : base(filename)
 		{
 			_isDisabled = false;
 			Set_Name(filename);
 		}
-		
+
 		public CDFileClass() : base()
 		{
 			_isDisabled = false;
@@ -22,7 +22,7 @@ namespace CCFileSystem
 			base.Set_Name(filename);
 			if (_isDisabled || !Is_There_Search_Drives() || base.Is_Available())
 				return File_Name();
-			
+
 			foreach (string drive in _searchDrives)
 			{
 				string full = Path.Combine(drive, filename);

@@ -306,7 +306,7 @@ namespace CCFileSystem
 			CloseImpl();
 		}
 
-		protected void Bias(long start, long length = -1)
+		public void Bias(long start, long length = -1)
 		{
 			if (start == 0)
 			{
