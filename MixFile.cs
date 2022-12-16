@@ -62,7 +62,7 @@ namespace CCFileSystem
 				throw new FileNotFoundException();
 
 			FileReader freader = new FileReader(_file);
-			PKReader preader = new PKReader(true);
+			PKReader preader = new PKReader(true, RndReader.CryptRandom);
 			CCReader reader = freader;
 			short First = BitConverter.ToInt16(reader.Get(2));
 			short Second = BitConverter.ToInt16(reader.Get(2));
@@ -89,7 +89,10 @@ namespace CCFileSystem
 				_dataSize = BitConverter.ToInt16(reader.Get(4));
 			}
 
-			subblocks = reader.Get(_count * SubBlock.MemorySize);
+			var t = reader.Get(_count * SubBlock.MemorySize);
+			if (t == null)
+				throw new FileLoadException();
+			subblocks = t;
 			_subBlocks = new List<SubBlock>();
 			for (int i = 0; i < _count; ++i)
 			{

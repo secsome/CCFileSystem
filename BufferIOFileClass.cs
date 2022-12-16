@@ -16,6 +16,9 @@ namespace CCFileSystem
 			{
 				if (base.Open(rights))
 				{
+					if (_stream == null)
+						throw new NullReferenceException("_stream");
+					
 					_stream = new BufferedStream(_stream);
 					return true;
 				}

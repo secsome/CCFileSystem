@@ -4,6 +4,7 @@ namespace CCFileSystem
 	{
 		public static readonly int BLOWFISH_KEY_SIZE = 56;
 
+		private RndReader _rnd;
 		private bool _isGettingKey;
 		private BlowReader _bf;
 		private bool _decrypt;
@@ -12,8 +13,9 @@ namespace CCFileSystem
 		private long _counter;
 		private long _bytesLeft;
 
-		public PKReader(bool decrypt) : base()
+		public PKReader(bool decrypt, RndReader rnd) : base()
 		{
+			_rnd = rnd;
 			_isGettingKey = true;
 			_bf = new BlowReader(decrypt);
 			_decrypt = decrypt;
@@ -69,9 +71,9 @@ namespace CCFileSystem
 				}
 				else
 				{
-					// TODO
-					throw new NotImplementedException();
-					byte[] cbuffer = new byte[BLOWFISH_KEY_SIZE];
+					var cbuffer = _rnd.Get(BLOWFISH_KEY_SIZE);
+					if (cbuffer == null)
+						throw new NullReferenceException("cbuffer");
 					_buffer = _cipherKey.Encrypt(cbuffer);
 					_counter = _bytesLeft = _buffer.Length;
 					_bf.Key(_buffer);

@@ -176,6 +176,8 @@ namespace CCFileSystem
 						length = remainder;
 				}
 
+				if (_stream == null)
+					throw new NullReferenceException("_stream");
 				var br = new BinaryReader(_stream);
 				MemoryStream buffer = new MemoryStream();
 				var bw = new BinaryWriter(buffer);
@@ -240,7 +242,7 @@ namespace CCFileSystem
 			if (_biasLength != -1)
 				return _biasLength;
 
-			if (Is_Open())
+			if (_stream != null)
 				size = _stream.Length;
 			else
 			{
@@ -274,6 +276,8 @@ namespace CCFileSystem
 					opened = true;
 				}
 
+				if (_stream == null)
+					throw new NullReferenceException("_stream");
 				long length = _stream.Position;
 				_stream.Write(buffer, 0, buffer.Length);
 				length = _stream.Position - length;
@@ -294,7 +298,7 @@ namespace CCFileSystem
 
 		private void CloseImpl()
 		{
-			if (Is_Open())
+			if (_stream != null)
 			{
 				_stream.Flush();
 				_stream.Dispose();
@@ -329,6 +333,8 @@ namespace CCFileSystem
 
 		protected long RawSeek(long pos, SeekOrigin dir = SeekOrigin.Current)
 		{
+			if (_stream == null)
+				throw new NullReferenceException("_stream");
 			return _stream.Seek(pos, dir);
 		}
 
