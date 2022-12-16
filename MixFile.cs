@@ -1,5 +1,4 @@
 global using MFCC = CCFileSystem.MixFile<CCFileSystem.CCFileClass>;
-using System.Diagnostics.CodeAnalysis;
 
 namespace CCFileSystem
 {
@@ -63,7 +62,7 @@ namespace CCFileSystem
 				throw new FileNotFoundException();
 
 			FileReader freader = new FileReader(_file);
-
+			BlowReader breader = new BlowReader(true);
 			CCReader reader = freader;
 			short First = BitConverter.ToInt16(reader.Get(2));
 			short Second = BitConverter.ToInt16(reader.Get(2));
@@ -77,17 +76,13 @@ namespace CCFileSystem
 				{
 					// Blowfish requires 8 bytes per block
 					var blowfishKey = pkey.Decrypt(reader.Get(BlowfishKeySourceLength)).Take(BlowfishKeyLength).ToArray();
-					var bf = new Encryption.Blowfish.BlowfishEcb(blowfishKey);
-					var header = reader.Get(BlowfishBlockSize);
-					bf.Decrypt(header);
+					breader.Get_From(reader);
+					breader.Key(blowfishKey);
+					reader = breader;
+					var header = reader.Get(6);
 					_count = BitConverter.ToInt16(header, 0);
 					_dataSize = BitConverter.ToInt32(header, 2);
-					// -2 because we have decoded those two bytes when decoding the header
-					// (size + 7) & (!7) for align by 8 bytes
-					int resLen = ((_count * SubBlock.MemorySize - 2) + 7) & (~7);
-					var data = reader.Get(resLen);
-					bf.Decrypt(data);
-					subblocks = header.Skip(6).Concat(data).ToArray();
+					subblocks = reader.Get(_count * SubBlock.MemorySize);
 				}
 				else
 				{
@@ -103,7 +98,6 @@ namespace CCFileSystem
 				_dataSize = BitConverter.ToInt16(reader.Get(4));
 				subblocks = reader.Get(_count * SubBlock.MemorySize);
 			}
-
 
 			_subBlocks = new List<SubBlock>();
 			for (int i = 0; i < _count; ++i)
