@@ -5,6 +5,17 @@ namespace CCFileSystem
 		private CCReader? _to;
 		private CCReader? _from;
 
+		public CCReader? ChainTo
+		{
+			get { return _to; }
+			internal set { _to = value; }
+		}
+		public CCReader? ChainFrom
+		{
+			get { return _from; }
+			internal set { _from = value; }
+		}
+
 		public CCReader()
 		{
 			_to = null;

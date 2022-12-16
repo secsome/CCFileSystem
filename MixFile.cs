@@ -62,7 +62,7 @@ namespace CCFileSystem
 				throw new FileNotFoundException();
 
 			FileReader freader = new FileReader(_file);
-			BlowReader breader = new BlowReader(true);
+			PKReader preader = new PKReader(true);
 			CCReader reader = freader;
 			short First = BitConverter.ToInt16(reader.Get(2));
 			short Second = BitConverter.ToInt16(reader.Get(2));
@@ -75,30 +75,21 @@ namespace CCFileSystem
 				if (_isEncrypted)
 				{
 					// Blowfish requires 8 bytes per block
-					var blowfishKey = pkey.Decrypt(reader.Get(BlowfishKeySourceLength)).Take(BlowfishKeyLength).ToArray();
-					breader.Get_From(reader);
-					breader.Key(blowfishKey);
-					reader = breader;
-					var header = reader.Get(6);
-					_count = BitConverter.ToInt16(header, 0);
-					_dataSize = BitConverter.ToInt32(header, 2);
-					subblocks = reader.Get(_count * SubBlock.MemorySize);
+					preader.Key(pkey);
+					preader.Get_From(reader);
+					reader = preader;
 				}
-				else
-				{
-					_count = BitConverter.ToInt16(reader.Get(2));
-					_dataSize = BitConverter.ToInt16(reader.Get(4));
-					subblocks = reader.Get(_count * SubBlock.MemorySize);
-				}
+				_count = BitConverter.ToInt16(reader.Get(2));
+				_dataSize = BitConverter.ToInt16(reader.Get(4));
 			}
 			else
 			{
 				_count = First;
 				_file.Seek(2, SeekOrigin.Begin);
 				_dataSize = BitConverter.ToInt16(reader.Get(4));
-				subblocks = reader.Get(_count * SubBlock.MemorySize);
 			}
-
+			
+			subblocks = reader.Get(_count * SubBlock.MemorySize);
 			_subBlocks = new List<SubBlock>();
 			for (int i = 0; i < _count; ++i)
 			{
