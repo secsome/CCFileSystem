@@ -1,8 +1,8 @@
 # CCFileSystem
-.. is a library for you to understand **Westwood** *mix* file format written in C#.
+.. is a library for you to understand **Westwood** *mix* file format and its file system written in C#.
 
 ## Why
-This lib will help you really understand how does those file formats working in really clean code. Compared to XCC simulated one.
+This lib will help you really understand how does the mix file format work in clean code. Compared to XCC simulated one.
 
 ## Usage
 In `PowerShell`, run `.\run.ps1`
