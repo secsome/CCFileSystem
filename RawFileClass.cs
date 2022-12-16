@@ -247,8 +247,9 @@ namespace CCFileSystem
 			return _biasLength;
 		}
 
-		public override long Write(byte[] buffer)
+		public override long Write(byte[] buffer, long size)
 		{
+			buffer = buffer.Take((int)size).ToArray();
 			try
 			{
 				bool opened = false;

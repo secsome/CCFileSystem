@@ -157,8 +157,10 @@ namespace CCFileSystem
 			return _length;
 		}
 
-		public override long Write(byte[] buffer)
+		public override long Write(byte[] buffer, long size)
 		{
+			buffer = buffer.Take((int)size).ToArray();
+
 			if (buffer.Length == 0)
 				return 0;
 

@@ -24,7 +24,7 @@ namespace CCFileSystem
 
 		public abstract long Size();
 
-		public abstract long Write(byte[] buffer);
+		public abstract long Write(byte[] buffer, long size);
 
 		public abstract void Close();
 
