@@ -3,6 +3,7 @@ using System.Numerics;
 
 namespace CCFileSystem
 {
+	// RSA Private/Public Key
 	public class PKey
 	{
 		public PKey(bool fast = true)
@@ -35,20 +36,26 @@ namespace CCFileSystem
 
 		public byte[] Encrypt(byte[] data)
 		{
-			// TODO
-			throw new NotImplementedException();
+			MemoryStream ms = new MemoryStream();
+			int idx = 0;
+			while (idx < data.Length)
+			{
+				BigInteger temp = new BigInteger(data.Skip(idx).Take(Plain_Block_Size).ToArray());
+				var buffer = BigInteger.ModPow(temp, _exponent, _modulus).ToByteArray().Take(Crypt_Block_Size).ToArray();
+				ms.Write(buffer);
+				idx += Plain_Block_Size;
+			}
+
+			return ms.ToArray();
 		}
 
 		public byte[] Decrypt(byte[] data)
 		{
-			// https://referencesource.microsoft.com/#System.Numerics/System/Numerics/BigInteger.cs
-			// ToByteArray and the byte[] CTOR is just what we need
 			MemoryStream ms = new MemoryStream();
 			int idx = 0;
 			while (idx < data.Length)
 			{
 				BigInteger temp = new BigInteger(data.Skip(idx).Take(Crypt_Block_Size).ToArray());
-				// RSA decryption: d = c ^ e mod m
 				var buffer = BigInteger.ModPow(temp, _exponent, _modulus).ToByteArray().Take(Plain_Block_Size).ToArray();
 				ms.Write(buffer);
 				idx += Crypt_Block_Size;
