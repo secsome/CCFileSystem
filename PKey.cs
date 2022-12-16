@@ -8,26 +8,26 @@ namespace CCFileSystem
 		public PKey(bool fast = true)
 		{
 			if (fast)
-				SetFastExponent();
+				Set_Fast_Exponent();
 		}
 
-		private BigInteger DERDecode(byte[] encoded)
+		private BigInteger DER_Decode(byte[] encoded)
 		{
 			AsnReader reader = new AsnReader(encoded, AsnEncodingRules.DER);
 			return reader.ReadInteger();
 		}
 
-		public void SetPublicKey(string pubkey)
+		public void Set_Public_Key(string pubkey)
 		{
-			_modulus = DERDecode(Convert.FromBase64String(pubkey));
+			_modulus = DER_Decode(Convert.FromBase64String(pubkey));
 		}
 
-		public void SetPrivateKey(string prikey)
+		public void Set_Private_Key(string prikey)
 		{
-			_exponent = DERDecode(Convert.FromBase64String(prikey));
+			_exponent = DER_Decode(Convert.FromBase64String(prikey));
 		}
 
-		public void SetFastExponent()
+		public void Set_Fast_Exponent()
 		{
 			_exponent = new BigInteger(0x10001);
 		}

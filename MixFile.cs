@@ -10,7 +10,7 @@ namespace CCFileSystem
 
 		public static MemoryStream? Retrieve(string filename)
 		{
-			return Retrieve(GetFileCRC(filename));
+			return Retrieve(Calculate_CRC(filename));
 		}
 
 		public static MemoryStream? Retrieve(int crc)
@@ -99,7 +99,7 @@ namespace CCFileSystem
 			_list.Remove(this);
 		}
 
-		private static int GetFileCRC(string s)
+		private static int Calculate_CRC(string s)
 		{
 			// Westwood CRCEngine consider 4 bytes as a block, so padding is required sometimes.
 			s = s.ToUpper(); // Only uses upper case

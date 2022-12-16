@@ -23,13 +23,13 @@ namespace CCFileSystem
 			return Flush();
 		}
 
-		void PutTo(CCWriter? writer)
+		void Put_To(CCWriter? writer)
 		{
 			if (_to != writer)
 			{
 				if (writer != null && writer._from != null)
 				{
-					writer._from.PutTo(null);
+					writer._from.Put_To(null);
 					writer._from = null;
 				}
 

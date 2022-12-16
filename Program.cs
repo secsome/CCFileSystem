@@ -6,7 +6,7 @@ class Program
 		string gamedir = @"";
 
 		PKey FastKey = new PKey(true);
-		FastKey.SetPublicKey("AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V");
+		FastKey.Set_Public_Key("AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V");
 		MixFile ra2 = new MixFile(Path.Combine(gamedir, "RA2.MIX"), FastKey);
 		MixFile ra2md = new MixFile(Path.Combine(gamedir, "RA2MD.MIX"), FastKey);
 

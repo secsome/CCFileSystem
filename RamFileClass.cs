@@ -27,19 +27,19 @@ namespace CCFileSystem
 			Close();
 		}
 
-		public override string FileName()
+		public override string File_Name()
 		{
 			return "UNKNOWN";
 		}
 
-		public override string SetName(string filename)
+		public override string Set_Name(string filename)
 		{
-			return FileName();
+			return File_Name();
 		}
 
 		public override bool Create()
 		{
-			if (!IsOpen())
+			if (!Is_Open())
 			{
 				_length = 0;
 				return true;
@@ -49,7 +49,7 @@ namespace CCFileSystem
 
 		public override bool Delete()
 		{
-			if (!IsOpen())
+			if (!Is_Open())
 			{
 				_length = 0;
 				return true;
@@ -57,12 +57,12 @@ namespace CCFileSystem
 			return false;
 		}
 
-		public override bool IsAvailable(bool forced = false)
+		public override bool Is_Available(bool forced = false)
 		{
 			return true;
 		}
 
-		public override bool IsOpen()
+		public override bool Is_Open()
 		{
 			return _isopen;
 		}
@@ -74,7 +74,7 @@ namespace CCFileSystem
 
 		public override bool Open(FileAccess rights = FileAccess.Read)
 		{
-			if (IsOpen() || _buffer.Length <= 0)
+			if (Is_Open() || _buffer.Length <= 0)
 				return false;
 
 			_offset = 0;
@@ -93,7 +93,7 @@ namespace CCFileSystem
 					break;
 			}
 
-			return IsOpen();
+			return Is_Open();
 		}
 
 		public override byte[]? Read(long length)
@@ -103,7 +103,7 @@ namespace CCFileSystem
 
 			bool hasopened = false;
 
-			if (!IsOpen())
+			if (!Is_Open())
 			{
 				Open();
 				hasopened = true;
@@ -124,7 +124,7 @@ namespace CCFileSystem
 
 		public override long Seek(long pos, SeekOrigin dir = SeekOrigin.Current)
 		{
-			if (!IsOpen())
+			if (!Is_Open())
 				return _offset;
 
 			int maxOffset = _length;
@@ -166,7 +166,7 @@ namespace CCFileSystem
 
 			bool hasopened = false;
 
-			if (!IsOpen())
+			if (!Is_Open())
 			{
 				Open(FileAccess.Write);
 				hasopened = true;

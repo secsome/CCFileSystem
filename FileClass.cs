@@ -2,17 +2,17 @@ namespace CCFileSystem
 {
 	public abstract class FileClass
 	{
-		public abstract string FileName();
+		public abstract string File_Name();
 
-		public abstract string SetName(string filename);
+		public abstract string Set_Name(string filename);
 
 		public abstract bool Create();
 
 		public abstract bool Delete();
 
-		public abstract bool IsAvailable(bool forced = false);
+		public abstract bool Is_Available(bool forced = false);
 
-		public abstract bool IsOpen();
+		public abstract bool Is_Open();
 
 		public abstract bool Open(string filename, FileAccess rights = FileAccess.Read);
 

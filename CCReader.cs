@@ -11,13 +11,13 @@ namespace CCFileSystem
 			_from = null;
 		}
 
-		public void GetFrom(CCReader? reader)
+		public void Get_From(CCReader? reader)
 		{
 			if (_to != reader)
 			{
 				if (reader != null && reader._from != null)
 				{
-					reader._from.GetFrom(null);
+					reader._from.Get_From(null);
 					reader._from = null;
 				}
 

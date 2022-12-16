@@ -32,12 +32,12 @@ namespace CCFileSystem
 			_filename = string.Empty;
 		}
 
-		public override string FileName()
+		public override string File_Name()
 		{
 			return _filename;
 		}
 
-		public override string SetName(string filename)
+		public override string Set_Name(string filename)
 		{
 			if (filename.Length == 0)
 				return string.Empty;
@@ -80,12 +80,12 @@ namespace CCFileSystem
 			return result;
 		}
 
-		public override bool IsAvailable(bool forced = false)
+		public override bool Is_Available(bool forced = false)
 		{
 			if (_filename.Length == 0)
 				return false;
 
-			if (IsOpen())
+			if (Is_Open())
 				return true;
 
 			if (forced)
@@ -105,14 +105,14 @@ namespace CCFileSystem
 			catch { return false; }
 		}
 
-		public override bool IsOpen()
+		public override bool Is_Open()
 		{
 			return _stream != null;
 		}
 
 		public override bool Open(string filename, FileAccess rights = FileAccess.Read)
 		{
-			SetName(filename);
+			Set_Name(filename);
 			return Open(rights);
 		}
 
@@ -158,7 +158,7 @@ namespace CCFileSystem
 			try
 			{
 				bool opened = false;
-				if (!IsOpen())
+				if (!Is_Open())
 				{
 					if (!Open(FileAccess.Read))
 						return null;
@@ -232,7 +232,7 @@ namespace CCFileSystem
 			if (_biasLength != -1)
 				return _biasLength;
 
-			if (IsOpen())
+			if (Is_Open())
 				size = _stream.Length;
 			else
 			{
@@ -254,7 +254,7 @@ namespace CCFileSystem
 			{
 				bool opened = false;
 
-				if (!IsOpen())
+				if (!Is_Open())
 				{
 					if (!Open(FileAccess.Write))
 						return 0;
@@ -282,7 +282,7 @@ namespace CCFileSystem
 
 		public override void Close()
 		{
-			if (IsOpen())
+			if (Is_Open())
 			{
 				_stream.Flush();
 				_stream.Dispose();
@@ -307,7 +307,7 @@ namespace CCFileSystem
 			if (_biasLength < 0)
 				_biasLength = 0;
 
-			if (IsOpen())
+			if (Is_Open())
 				(this as RawFileClass).Seek(0, SeekOrigin.Begin);
 		}
 

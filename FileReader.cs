@@ -25,11 +25,11 @@ namespace CCFileSystem
 		{
 			if (_file != null && length > 0)
 			{
-				if (!_file.IsOpen())
+				if (!_file.Is_Open())
 				{
 					_hasOpened = true;
 
-					if (!_file.IsAvailable())
+					if (!_file.Is_Available())
 						return null;
 
 					if (!_file.Open(FileAccess.Read))
