@@ -1,14 +1,17 @@
 ﻿namespace CCFileSystem;
+
 class Program
 {
 	static void Main(string[] args)
 	{
-		string gamedir = @"";
+		string gamedir = @"E:\Games\Mental Omega\Mental Omega 3.3.7";
+		CCFileClass ccfile = new CCFileClass(Path.Combine(gamedir, "RA2.MIX"));
+		ccfile.Is_Available(true);
 
 		PKey FastKey = new PKey(true);
 		FastKey.Set_Public_Key("AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V");
-		MixFile ra2 = new MixFile(Path.Combine(gamedir, "RA2.MIX"), FastKey);
-		MixFile ra2md = new MixFile(Path.Combine(gamedir, "RA2MD.MIX"), FastKey);
+		MFCC ra2 = new MFCC(Path.Combine(gamedir, "RA2.MIX"), FastKey);
+		MFCC ra2md = new MFCC(Path.Combine(gamedir, "RA2MD.MIX"), FastKey);
 
 		Console.WriteLine("RA2.MIX info:");
 		foreach (var subblock in ra2.SubBlocks)

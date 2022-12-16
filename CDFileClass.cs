@@ -17,21 +17,21 @@ namespace CCFileSystem
 			_isDisabled = false;
 		}
 
-		public new string Set_Name(string filename)
+		public override string Set_Name(string filename)
 		{
-			(this as BufferIOFileClass).Set_Name(filename);
-			if (_isDisabled || !Is_There_Search_Drives() || (this as BufferIOFileClass).Is_Available())
+			base.Set_Name(filename);
+			if (_isDisabled || !Is_There_Search_Drives() || base.Is_Available())
 				return File_Name();
 			
 			foreach (string drive in _searchDrives)
 			{
 				string full = Path.Combine(drive, filename);
-				(this as BufferIOFileClass).Set_Name(full);
-				if ((this as BufferIOFileClass).Is_Available())
+				base.Set_Name(full);
+				if (base.Is_Available())
 					return File_Name();
 			}
 
-			(this as BufferIOFileClass).Set_Name(filename);
+			base.Set_Name(filename);
 			return File_Name();
 		}
 

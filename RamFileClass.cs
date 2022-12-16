@@ -3,13 +3,13 @@ namespace CCFileSystem
 	public class RamFileClass : FileClass
 	{
 		private byte[] _buffer;
-		private int _maxLength;
-		private int _length;
-		private int _offset;
+		private long _maxLength;
+		private long _length;
+		private long _offset;
 		private FileAccess _access;
 		private bool _isopen;
 
-		public RamFileClass(byte[]? buffer, int len)
+		public RamFileClass(byte[]? buffer, long len)
 		{
 			_length = len;
 			_maxLength = len;
@@ -111,9 +111,9 @@ namespace CCFileSystem
 			else if ((_access & FileAccess.Read) != FileAccess.Read)
 				return null;
 
-			int tocopy = (int)Math.Min(length, _length - _offset);
+			long tocopy = Math.Min(length, _length - _offset);
 			var ret = new byte[tocopy];
-			Buffer.BlockCopy(_buffer, _offset, ret, 0, tocopy);
+			ret.MemCopy(_offset, ret, 0, tocopy);
 			_offset += tocopy;
 
 			if (hasopened)
@@ -127,7 +127,7 @@ namespace CCFileSystem
 			if (!Is_Open())
 				return _offset;
 
-			int maxOffset = _length;
+			long maxOffset = _length;
 
 			if ((_access & FileAccess.Write) == FileAccess.Write)
 				maxOffset = _maxLength;
@@ -159,7 +159,7 @@ namespace CCFileSystem
 
 		public override long Write(byte[] buffer, long size)
 		{
-			buffer = buffer.Take((int)size).ToArray();
+			buffer = buffer.LongTake(size);
 
 			if (buffer.Length == 0)
 				return 0;
@@ -174,8 +174,8 @@ namespace CCFileSystem
 			else if ((_access & FileAccess.Write) == FileAccess.Write)
 				return 0;
 
-			int towrite = Math.Min(buffer.Length, _maxLength - _offset);
-			Buffer.BlockCopy(buffer, 0, _buffer, _offset, towrite);
+			long towrite = Math.Min(buffer.Length, _maxLength - _offset);
+			buffer.MemCopy(0, _buffer, _offset, towrite);
 			_offset += towrite;
 
 			if (_offset > _length)

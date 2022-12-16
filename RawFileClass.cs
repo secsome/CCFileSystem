@@ -90,8 +90,8 @@ namespace CCFileSystem
 
 			if (forced)
 			{
-				(this as RawFileClass).Open(FileAccess.Read);
-				(this as RawFileClass).Close();
+				OpenImpl(FileAccess.Read);
+				CloseImpl();
 				return true;
 			}
 
@@ -116,7 +116,7 @@ namespace CCFileSystem
 			return Open(rights);
 		}
 
-		public override bool Open(FileAccess rights = FileAccess.Read)
+		private bool OpenImpl(FileAccess rights = FileAccess.Read)
 		{
 			Close();
 
@@ -151,6 +151,10 @@ namespace CCFileSystem
 			catch { return false; }
 
 			return true;
+		}
+		public override bool Open(FileAccess rights = FileAccess.Read)
+		{
+			return OpenImpl(rights);
 		}
 
 		public override byte[]? Read(long length)
@@ -192,7 +196,7 @@ namespace CCFileSystem
 			catch { return null; }
 		}
 
-		public override long Seek(long pos, SeekOrigin dir = SeekOrigin.Current)
+		public long SeekImpl(long pos, SeekOrigin dir = SeekOrigin.Current)
 		{
 			if (_biasLength != -1)
 			{
@@ -225,8 +229,12 @@ namespace CCFileSystem
 
 			return RawSeek(pos, dir);
 		}
+		public override long Seek(long pos, SeekOrigin dir = SeekOrigin.Current)
+		{
+			return SeekImpl(pos, dir);
+		}
 
-		public override long Size()
+		public long SizeImpl()
 		{
 			long size = 0;
 			if (_biasLength != -1)
@@ -246,10 +254,14 @@ namespace CCFileSystem
 			_biasLength = size - _biasLength;
 			return _biasLength;
 		}
+		public override long Size()
+		{
+			return SizeImpl();
+		}
 
 		public override long Write(byte[] buffer, long size)
 		{
-			buffer = buffer.Take((int)size).ToArray();
+			buffer = buffer.LongTake(size);
 			try
 			{
 				bool opened = false;
@@ -280,7 +292,7 @@ namespace CCFileSystem
 			catch { return 0; }
 		}
 
-		public override void Close()
+		private void CloseImpl()
 		{
 			if (Is_Open())
 			{
@@ -288,6 +300,10 @@ namespace CCFileSystem
 				_stream.Dispose();
 				_stream = null;
 			}
+		}
+		public override void Close()
+		{
+			CloseImpl();
 		}
 
 		protected void Bias(long start, long length = -1)
@@ -299,7 +315,7 @@ namespace CCFileSystem
 				return;
 			}
 
-			_biasLength = (this as RawFileClass).Size();
+			_biasLength = SizeImpl();
 			_biasStart += start;
 			if (length != -1 && length < _biasLength)
 				_biasLength = length;
@@ -308,7 +324,7 @@ namespace CCFileSystem
 				_biasLength = 0;
 
 			if (Is_Open())
-				(this as RawFileClass).Seek(0, SeekOrigin.Begin);
+				SeekImpl(0, SeekOrigin.Begin);
 		}
 
 		protected long RawSeek(long pos, SeekOrigin dir = SeekOrigin.Current)

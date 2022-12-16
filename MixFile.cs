@@ -1,30 +1,29 @@
+global using MFCC = CCFileSystem.MixFile<CCFileSystem.CCFileClass>;
+
 namespace CCFileSystem
 {
-	public class MixFile
+	public class MixFile<TFile> where TFile : FileClass, new()
 	{
-		private static LinkedList<MixFile> _list = new LinkedList<MixFile>();
+		private static LinkedList<MixFile<TFile>> _list = new LinkedList<MixFile<TFile>>();
 
 		public static readonly int BlowfishKeySourceLength = 80;
 		public static readonly int BlowfishKeyLength = 56;
 		public static readonly int BlowfishBlockSize = 8;
 
-		public static MemoryStream? Retrieve(string filename)
+		public static MixFile<TFile>? Offset(string filename, out byte[]? data, out int offset, out int size)
 		{
-			return Retrieve(Calculate_CRC(filename));
+			data = null;
+			offset = 0;
+			size = 0;
+			return null;
 		}
 
-		public static MemoryStream? Retrieve(int crc)
+		public static MixFile<TFile>? Find(string filename)
 		{
-			foreach (MixFile file in _list)
-			{
-				if (file._subBlocks.ContainsKey(crc))
-				{
-					var block = file._subBlocks[crc];
-					file._fs.Seek(file._dataStart + block.Offset, SeekOrigin.Begin);
-					return new MemoryStream(file._br.ReadBytes(block.Size), false);
-				}
-			}
-			return null;
+			byte[]? data;
+			int offset;
+			int size;
+			return Offset(filename, out data, out offset, out size);
 		}
 
 		public struct SubBlock
@@ -37,11 +36,16 @@ namespace CCFileSystem
 
 		public MixFile(string filename, PKey pkey)
 		{
-			_fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
-			_br = new BinaryReader(_fs);
+			_file = new TFile();
+			_file.Set_Name(filename);
+			if (!_file.Is_Available() || !_file.Open())
+				throw new FileNotFoundException();
 
-			short First = _br.ReadInt16();
-			short Second = _br.ReadInt16();
+			FileReader freader = new FileReader(_file);
+
+			CCReader reader = freader;
+			short First = BitConverter.ToInt16(reader.Get(2));
+			short Second = BitConverter.ToInt16(reader.Get(2));
 			byte[] subblocks;
 			if (First == 0)
 			{
@@ -51,32 +55,32 @@ namespace CCFileSystem
 				if (_isEncrypted)
 				{
 					// Blowfish requires 8 bytes per block
-					var blowfishKey = pkey.Decrypt(_br.ReadBytes(BlowfishKeySourceLength)).Take(BlowfishKeyLength).ToArray();
+					var blowfishKey = pkey.Decrypt(reader.Get(BlowfishKeySourceLength)).Take(BlowfishKeyLength).ToArray();
 					var bf = new Encryption.Blowfish.BlowfishEcb(blowfishKey);
-					var header = _br.ReadBytes(BlowfishBlockSize);
+					var header = reader.Get(BlowfishBlockSize);
 					bf.Decrypt(header);
 					_count = BitConverter.ToInt16(header, 0);
 					_dataSize = BitConverter.ToInt32(header, 2);
 					// -2 because we have decoded those two bytes when decoding the header
 					// (size + 7) & (!7) for align by 8 bytes
 					int resLen = ((_count * SubBlock.MemorySize - 2) + 7) & (~7);
-					var data = _br.ReadBytes(resLen);
+					var data = reader.Get(resLen);
 					bf.Decrypt(data);
 					subblocks = header.Skip(6).Concat(data).ToArray();
 				}
 				else
 				{
-					_count = _br.ReadInt16();
-					_dataSize = _br.ReadInt32();
-					subblocks = _br.ReadBytes(_count * SubBlock.MemorySize);
+					_count = BitConverter.ToInt16(reader.Get(2));
+					_dataSize = BitConverter.ToInt16(reader.Get(4));
+					subblocks = reader.Get(_count * SubBlock.MemorySize);
 				}
 			}
 			else
 			{
 				_count = First;
-				_br.BaseStream.Seek(2, SeekOrigin.Begin);
-				_dataSize = _br.ReadInt32();
-				subblocks = _br.ReadBytes(_count * SubBlock.MemorySize);
+				_file.Seek(2, SeekOrigin.Begin);
+				_dataSize = BitConverter.ToInt16(reader.Get(4));
+				subblocks = reader.Get(_count * SubBlock.MemorySize);
 			}
 
 
@@ -89,7 +93,8 @@ namespace CCFileSystem
 				block.Size = BitConverter.ToInt32(subblocks, SubBlock.MemorySize * i + 8);
 				_subBlocks[block.CRC] = block;
 			}
-			_dataStart = _fs.Position;
+			_dataStart = _file.Seek(0);
+			_filename = filename;
 
 			_list.AddFirst(this);
 		}
@@ -124,8 +129,8 @@ namespace CCFileSystem
 				// If this file is digested, then the last 20 bytes is SHA1 sum of it.
 				if (_isDigest)
 				{
-					_fs.Seek(-20, SeekOrigin.End);
-					return _br.ReadBytes(20);
+					_file.Seek(-20, SeekOrigin.End);
+					return _file.Read(20);
 				}
 				else
 					return null;
@@ -156,6 +161,12 @@ namespace CCFileSystem
 			private set { _subBlocks = value; }
 		}
 
+		public string Filename
+		{
+			get { return _filename; }
+			private set { _filename = value; }
+		}
+
 		public bool IsDigest
 		{
 			get { return _isDigest; }
@@ -169,13 +180,13 @@ namespace CCFileSystem
 		}
 
 		private SortedList<int, SubBlock> _subBlocks;
+		private string _filename;
 		private long _dataStart;
 		private int _count;
 		private int _dataSize;
 		private bool _isDigest;
 		private bool _isEncrypted;
-		private FileStream _fs;
-		private BinaryReader _br;
+		private TFile _file;
 	}
 
 

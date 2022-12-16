@@ -10,11 +10,11 @@ namespace CCFileSystem
 		{
 		}
 
-		public new bool Open(FileAccess rights = FileAccess.Read)
+		public override bool Open(FileAccess rights = FileAccess.Read)
 		{
 			try
 			{
-				if ((this as RawFileClass).Open(rights))
+				if (base.Open(rights))
 			{
 				_stream = new BufferedStream(_stream);
 				return true;

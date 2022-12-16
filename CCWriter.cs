@@ -11,19 +11,19 @@ namespace CCFileSystem
 			_from = null;
 		}
 
-		int Flush()
+		public virtual int Flush()
 		{
 			if (_to == null)
 				return 0;
 			return _to.Flush();
 		}
 
-		int End()
+		public virtual int End()
 		{
 			return Flush();
 		}
 
-		void Put_To(CCWriter? writer)
+		public virtual void Put_To(CCWriter? writer)
 		{
 			if (_to != writer)
 			{
@@ -45,7 +45,7 @@ namespace CCFileSystem
 			}
 		}
 
-		int Put(byte[] source)
+		public virtual int Put(byte[] source)
 		{
 			if (_to == null)
 				return source.Length;

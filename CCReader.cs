@@ -11,7 +11,7 @@ namespace CCFileSystem
 			_from = null;
 		}
 
-		public void Get_From(CCReader? reader)
+		public virtual void Get_From(CCReader? reader)
 		{
 			if (_to != reader)
 			{
@@ -30,7 +30,7 @@ namespace CCFileSystem
 			}
 		}
 
-		public byte[]? Get(int length)
+		public virtual byte[]? Get(int length)
 		{
 			if (_to == null)
 				return null;
