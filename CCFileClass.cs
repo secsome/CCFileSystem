@@ -2,7 +2,7 @@ namespace CCFileSystem
 {
 	public class CCFileClass : CDFileClass
 	{
-		private byte[]? _data;
+		private CCBuffer? _data;
 		private long _position;
 
 		public CCFileClass(string filename) : base(filename)
@@ -36,12 +36,12 @@ namespace CCFileSystem
 
 			if (_data != null)
 			{
-				size = Math.Min(size, _data.LongLength - _position);
+				size = Math.Min(size, _data.Length - _position);
 				byte[]? ret = null;
 				if (size > 0)
 				{
 					ret = new byte[size];
-					_data.MemCopy(_position, ret, 0, size);
+					_data.RawBuffer.MemCopy(_data.BeginOffset + _position, ret, 0, size);
 					_position += size;
 				}
 				if (opened)
@@ -67,13 +67,13 @@ namespace CCFileSystem
 					case SeekOrigin.Current:
 						break;
 					case SeekOrigin.End:
-						_position = _data.LongLength;
+						_position = _data.Length;
 						break;
 					default:
 						throw new ArgumentOutOfRangeException("dir");
 				}
 				_position += pos;
-				_position = Math.Clamp(_position, 0, _data.LongLength);
+				_position = Math.Clamp(_position, 0, _data.Length);
 
 				return _position;
 			}
@@ -84,11 +84,11 @@ namespace CCFileSystem
 		public override long Size()
 		{
 			if (_data != null)
-				return _data.LongLength;
+				return _data.Length;
 
 			if (!base.Is_Available())
 			{
-				byte[]? data;
+				CCBuffer? data;
 				int offset;
 				int size;
 				MFCC.Offset(File_Name(), out data, out offset, out size);
@@ -131,7 +131,7 @@ namespace CCFileSystem
 			if ((rights & FileAccess.Write) == FileAccess.Write || base.Is_Available())
 				return base.Open(rights);
 
-			byte[]? data;
+			CCBuffer? data;
 			int offset;
 			int size;
 			var mixfile = MFCC.Offset(File_Name(), out data, out offset, out size);

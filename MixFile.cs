@@ -5,10 +5,7 @@ namespace CCFileSystem
 	public class MixFile<TFile> where TFile : RawFileClass, new()
 	{
 		private static LinkedList<MixFile<TFile>> _list = new LinkedList<MixFile<TFile>>();
-
-		public static readonly int BlowfishKeySourceLength = 80;
-		public static readonly int BlowfishKeyLength = 56;
-		public static readonly int BlowfishBlockSize = 8;
+		private static Dictionary<string, byte[]> _caches = new Dictionary<string, byte[]>();
 
 		private List<SubBlock> _subBlocks;
 		private string _filename;
@@ -25,7 +22,7 @@ namespace CCFileSystem
 
 		public static MixFile<TFile>? Find(string filename)
 		{
-			byte[]? data;
+			CCBuffer? data;
 			int offset;
 			int size;
 			return Offset(filename, out data, out offset, out size);
@@ -74,19 +71,18 @@ namespace CCFileSystem
 
 				if (_isEncrypted)
 				{
-					// Blowfish requires 8 bytes per block
 					preader.Key(pkey);
 					preader.Get_From(reader);
 					reader = preader;
 				}
 				_count = BitConverter.ToInt16(reader.Get(2));
-				_dataSize = BitConverter.ToInt16(reader.Get(4));
+				_dataSize = BitConverter.ToInt32(reader.Get(4));
 			}
 			else
 			{
 				_count = First;
 				_file.Seek(2, SeekOrigin.Begin);
-				_dataSize = BitConverter.ToInt16(reader.Get(4));
+				_dataSize = BitConverter.ToInt32(reader.Get(4));
 			}
 
 			var t = reader.Get(_count * SubBlock.MemorySize);
@@ -138,8 +134,7 @@ namespace CCFileSystem
 			catch { return false; }
 		}
 
-
-		public static MixFile<TFile>? Offset(string filename, out byte[]? data, out int offset, out int size)
+		public static MixFile<TFile>? Offset(string filename, out CCBuffer? data, out int offset, out int size)
 		{
 			data = null;
 			offset = 0;
@@ -159,7 +154,7 @@ namespace CCFileSystem
 					size = block.Size;
 					offset = block.Offset;
 					if (mix._data != null)
-						data = mix._data.Take(block.Offset).ToArray(); // TODO - Reduce memory waste here 
+						data = new CCBuffer(mix._data, block.Size, block.Offset);
 					if (mix._data == null)
 						offset += (int)mix._dataStart;
 					return mix;
@@ -167,6 +162,45 @@ namespace CCFileSystem
 			}
 
 			return null;
+		}
+
+		static public byte[]? Retrieve(string filename)
+		{
+			byte[]? cache;
+			if (_caches.TryGetValue(filename, out cache))
+				return _caches[filename];
+
+			CCBuffer? data;
+			int offset;
+			int size;
+			var mix = Offset(filename, out data, out offset, out size);
+
+			if (data != null)
+			{
+				cache = new byte[data.Length];
+				data.RawBuffer.MemCopy(data.BeginOffset, cache, 0, data.Length);
+				_caches[filename] = cache;
+				return cache;
+			}
+
+			TFile file = new TFile();
+			file.Open(filename);
+			
+			cache = file.Read_Whole_File();
+			if (cache == null)
+				return null;
+			_caches[filename] = cache;
+			return cache;
+		}
+
+		static public bool Free_Cache(string filename)
+		{
+			return _caches.Remove(filename);
+		}
+
+		static public void Free_Cache_All()
+		{
+			_caches.Clear();
 		}
 
 		static private MixFile<TFile>? Finder(string filename)
@@ -221,7 +255,7 @@ namespace CCFileSystem
 				{
 					var sha1 = sha.Result();
 					var sha2 = freader.Get(20);
-					if (sha2 == null || !sha1.SequenceEqual(sha2))
+					if (sha1 == null || sha2 == null || !sha1.SequenceEqual(sha2))
 					{
 						_data = null;
 						return false;

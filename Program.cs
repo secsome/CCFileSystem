@@ -1,4 +1,4 @@
-﻿namespace CCFileSystem;
+namespace CCFileSystem;
 
 class Program
 {
@@ -27,7 +27,7 @@ class Program
 
 		Init_Boostrap_Mixfiles(FastKey);
 
-		byte[]? data;
+		CCBuffer? data;
 		int size;
 		int offset;
 		var mix = MFCC.Offset("12metfnt.fnt", out data, out offset, out size);
