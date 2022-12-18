@@ -5,6 +5,7 @@ namespace CCFileSystem
 	public class SHAReader : CCReader
 	{
 		private SHA1 _sha;
+		private byte[]? _buffer;
 
 		public SHAReader() : base()
 		{
@@ -13,17 +14,19 @@ namespace CCFileSystem
 
 		public override byte[]? Get(long length)
 		{
-			byte[]? buffer = base.Get(length);
-			if (buffer == null)
-				return null;
+			if (_buffer != null)
+				_sha.TransformBlock(_buffer, 0, _buffer.Length, null, 0);
 
-			_sha.TransformBlock(buffer, 0, buffer.Length, null, 0);
-			return buffer;
+			_buffer = base.Get(length);
+			return _buffer;
 		}
 
-		public byte[] Result()
+		public byte[]? Result()
 		{
-			return _sha.TransformFinalBlock(new byte[1], 0, 0);
+			if (_buffer == null)
+				return null;
+			_sha.TransformFinalBlock(_buffer, 0, _buffer.Length);
+			return _sha.Hash;
 		}
 	}
 
