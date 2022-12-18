@@ -28,5 +28,15 @@ namespace CCFileSystem
 
 		public abstract void Close();
 
+		public byte[]? Read_Whole_File()
+		{
+			if (Is_Available())
+			{
+				long size = Size();
+				if (size > 0)
+					return Read(size);
+			}
+			return null;
+		}
 	}
 }
